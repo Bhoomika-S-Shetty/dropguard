@@ -1049,7 +1049,7 @@ async function loadDashboard() {
 // ─── STUDENTS ───
 async function loadStudents() {
   studentsLoaded = true;
-  const res = await fetch('http://127.0.0.1:5050/api/students');
+  const res = await fetch('s/api/students');
   console.log(res);
   const d = await res.json();
   console.log(d);
