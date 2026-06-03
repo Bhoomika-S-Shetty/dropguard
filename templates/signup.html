@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DropGuard AI - Sign Up</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#2563eb,#7c3aed);
+overflow:hidden;
+}
+
+.container{
+width:1000px;
+display:flex;
+background:rgba(255,255,255,.15);
+backdrop-filter:blur(20px);
+border-radius:25px;
+overflow:hidden;
+box-shadow:0 20px 50px rgba(0,0,0,.25);
+}
+
+.left{
+flex:1;
+padding:50px;
+color:white;
+display:flex;
+flex-direction:column;
+justify-content:center;
+}
+
+.left h1{
+font-size:42px;
+margin-bottom:20px;
+}
+
+.left p{
+font-size:18px;
+line-height:1.6;
+}
+
+.left i{
+font-size:80px;
+margin-bottom:20px;
+}
+
+.right{
+flex:1;
+background:white;
+padding:45px;
+}
+
+.right h2{
+color:#1e3a8a;
+margin-bottom:10px;
+font-size:32px;
+}
+
+.subtitle{
+color:gray;
+margin-bottom:25px;
+}
+
+.input-group{
+margin-bottom:15px;
+}
+
+.input-group label{
+display:block;
+margin-bottom:6px;
+font-weight:600;
+}
+
+.input-group input,
+.input-group select{
+width:100%;
+padding:13px;
+border:1px solid #ddd;
+border-radius:10px;
+}
+
+.signup-btn{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+background:linear-gradient(135deg,#2563eb,#7c3aed);
+color:white;
+font-size:16px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.signup-btn:hover{
+opacity:.9;
+}
+
+.footer{
+text-align:center;
+margin-top:20px;
+}
+
+.footer a{
+color:#2563eb;
+text-decoration:none;
+font-weight:600;
+}
+
+@media(max-width:900px){
+
+.container{
+width:95%;
+flex-direction:column;
+}
+
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="left">
+
+<i class="fas fa-user-graduate"></i>
+
+<h1>Join DropGuard AI</h1>
+
+<p>
+Create your faculty account and access
+student risk prediction, interventions,
+analytics, and academic performance insights.
+</p>
+
+</div>
+
+<div class="right">
+
+<h2>Create Account</h2>
+
+<p class="subtitle">
+Faculty Registration Portal
+</p>
+
+<form action="/signup" method="POST">
+
+<div class="input-group">
+<label>Full Name</label>
+<input type="text" name="name" required>
+</div>
+
+<div class="input-group">
+<label>Faculty ID</label>
+<input type="text" name="faculty_id" required>
+</div>
+
+<div class="input-group">
+<label>Department</label>
+
+<select name="department">
+<option>CSE</option>
+<option>ECE</option>
+<option>EEE</option>
+<option>Mechanical</option>
+<option>Civil</option>
+<option>IT</option>
+</select>
+
+</div>
+
+<div class="input-group">
+<label>Email Address</label>
+<input type="email" name="email" required>
+</div>
+
+<div class="input-group">
+<label>Password</label>
+<input type="password" name="password" required>
+</div>
+
+<div class="input-group">
+<label>Confirm Password</label>
+<input type="password" required>
+</div>
+
+<button type="submit" class="signup-btn">
+Create Account
+</button>
+
+</form>
+
+<div class="footer">
+Already have an account?
+<a href="/">Login</a>
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

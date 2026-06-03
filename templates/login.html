@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>DropGuard AI Login</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    height:100vh;
+    overflow:hidden;
+
+    background:url("https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=2070") center center/cover no-repeat;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+body::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.45);
+}
+
+.container{
+    position:relative;
+    z-index:2;
+
+    width:92%;
+    height:88vh;
+
+    display:flex;
+
+    border-radius:25px;
+    overflow:hidden;
+
+    backdrop-filter:blur(10px);
+    box-shadow:0 20px 50px rgba(0,0,0,.4);
+}
+
+.left{
+    flex:1.2;
+
+    background:
+    linear-gradient(
+    135deg,
+    rgba(37,99,235,.95),
+    rgba(124,58,237,.95)
+    );
+
+    position:relative;
+    padding:50px;
+    color:white;
+}
+
+.logo{
+    font-size:42px;
+    font-weight:700;
+    margin-bottom:30px;
+}
+
+.left h1{
+    font-size:64px;
+    line-height:1.05;
+    margin-bottom:25px;
+}
+
+.left p{
+    font-size:20px;
+    max-width:650px;
+    line-height:1.7;
+    opacity:.95;
+}
+
+.features{
+    list-style:none;
+    margin-top:40px;
+}
+
+.features li{
+    margin:18px 0;
+    font-size:22px;
+}
+.logo,
+.left h1,
+.left p,
+.features{
+    position:relative;
+    z-index:2;
+}
+.student{
+    position:absolute;
+
+    bottom:0;
+    right:20px;
+
+    width:280px;
+    height:auto;
+
+    z-index:1;
+    opacity:0.95;
+}
+
+.right{
+    flex:.8;
+    background:white;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:40px;
+}
+
+.form-box{
+    width:100%;
+    max-width:420px;
+}
+
+.form-box h2{
+    font-size:52px;
+    color:#0f172a;
+    margin-bottom:10px;
+}
+
+.form-box p{
+    color:#666;
+    margin-bottom:30px;
+}
+
+.input-group{
+    margin-bottom:18px;
+}
+
+.input-group label{
+    display:block;
+    margin-bottom:8px;
+    font-weight:600;
+}
+
+.input-group input,
+.input-group select{
+
+    width:100%;
+    padding:15px;
+
+    border:1px solid #ddd;
+    border-radius:12px;
+
+    font-size:16px;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:20px;
+}
+
+.row a{
+    color:#6d28d9;
+    text-decoration:none;
+}
+
+.login-btn{
+
+    width:100%;
+    border:none;
+
+    padding:16px;
+
+    border-radius:12px;
+
+    font-size:18px;
+    font-weight:600;
+
+    color:white;
+
+    cursor:pointer;
+
+    background:
+    linear-gradient(
+    135deg,
+    #2563eb,
+    #7c3aed
+    );
+}
+
+.login-btn:hover{
+    opacity:.9;
+}
+
+.signup{
+    text-align:center;
+    margin-top:20px;
+}
+
+.signup a{
+    color:#6d28d9;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.theme-btn{
+    position:absolute;
+    top:20px;
+    right:20px;
+
+    width:50px;
+    height:50px;
+
+    border:none;
+    border-radius:50%;
+
+    cursor:pointer;
+}
+
+.dark{
+    background:#111827;
+}
+
+.dark .right{
+    background:#1f2937;
+}
+
+.dark .form-box h2,
+.dark label{
+    color:white;
+}
+
+.dark .form-box p{
+    color:#cbd5e1;
+}
+
+.dark input,
+.dark select{
+    background:#374151;
+    color:white;
+    border:none;
+}
+
+@media(max-width:1100px){
+
+.container{
+    flex-direction:column;
+    height:auto;
+    overflow:auto;
+}
+
+.left{
+    min-height:400px;
+}
+
+.student{
+    width:260px;
+}
+
+.left h1{
+    font-size:45px;
+}
+
+.form-box h2{
+    font-size:40px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="left">
+
+<div class="logo">
+🛡 DropGuard AI
+</div>
+
+<h1>
+Student Dropout
+Prediction
+</h1>
+
+<p>
+Predict dropout risks, monitor attendance trends and
+help institutions take timely intervention using AI and
+Machine Learning.
+</p>
+
+<ul class="features">
+<li>✅ AI Risk Prediction</li>
+<li>✅ Attendance Analytics</li>
+<li>✅ Department Reports</li>
+<li>✅ Early Intervention Alerts</li>
+</ul>
+
+<img
+class="student"
+src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png">
+
+</div>
+
+<div class="right">
+
+<button class="theme-btn" onclick="toggleTheme()">
+🌙
+</button>
+
+<div class="form-box">
+
+<h2>Welcome Back</h2>
+
+<p>Login to access DropGuard AI Dashboard</p>
+
+<form action="/login" method="POST">
+
+<div class="input-group">
+<label>User Role</label>
+<select name="role">
+<option>Admin</option>
+<option>Faculty</option>
+</select>
+</div>
+
+<div class="input-group">
+<label>Email / Faculty ID</label>
+<input type="email" name="username" placeholder="Enter Email Address" required>
+</div>
+
+<div class="input-group">
+<label>Password</label>
+<input type="password" name="password" placeholder="Enter Password" required>
+</div>
+
+<div class="row">
+<label>
+<input type="checkbox">
+ Remember Me
+</label>
+
+<a href="/forgot-password">
+Forgot Password?
+</a>
+</div>
+
+<button class="login-btn">
+Login to Dashboard
+</button>
+
+</form>
+
+<div class="signup">
+Don't have an account?
+<a href="/signup">Sign Up</a>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function toggleTheme(){
+document.body.classList.toggle('dark');
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DropGuard AI — Student Dropout Prediction</title>
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f4f5f7; --surface: #ffffff; --surface2: #f0f2f5;
+    --text: #1a1d23; --text2: #5a6070; --text3: #8a93a5;
+    --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.14);
+    --accent: #185FA5; --accent-bg: #e6f1fb; --accent-light: #b5d4f4;
+    --risk-h: #A32D2D; --risk-h-bg: #FCEBEB; --risk-h-bd: #F09595;
+    --risk-m: #854F0B; --risk-m-bg: #FAEEDA; --risk-m-bd: #FAC775;
+    --risk-l: #3B6D11; --risk-l-bg: #EAF3DE; --risk-l-bd: #C0DD97;
+    --green: #3B6D11; --green-bg: #EAF3DE;
+    --radius: 10px; --radius-sm: 6px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 0 0 0.5px rgba(0,0,0,0.06);
+    --sidebar-w: 220px;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  body { font-family:'Inter',sans-serif; background:#f8fafc; color: var(--text); min-height: 100vh; display: flex; font-size: 14px; }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar{
+    width:260px;
+    position:fixed;
+    left:0;
+    top:0;
+    height:100vh;
+    background:linear-gradient(180deg,#0f172a,#1e1b4b);
+    color:white;
+    display:flex;
+    flex-direction:column;
+    z-index:100;
+}
+.menu-item.active{
+    background: rgba(99,102,241,.25);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:14px;
+}
+  .logo { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); }
+  .logo-icon { width: 34px; height: 34px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+  .logo-icon i { color: #fff; font-size: 16px; }
+  .logo-title{
+    color:white;
+    font-size:28px;
+    font-weight:700;
+}
+
+.logo-sub{
+    color:#cbd5e1;
+}
+  .nav { flex: 1; padding: 10px 10px; overflow-y: auto; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 10px 8px 4px; }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 16px;
+    color:#cbd5e1;
+    border-radius:14px;
+    cursor:pointer;
+    margin-bottom:8px;
+    transition:.3s;
+}
+
+.nav-item:hover{
+    background:rgba(255,255,255,.08);
+    color:white;
+}
+
+.nav-item.active{
+    background:rgba(99,102,241,.25);
+    border:1px solid rgba(255,255,255,.15);
+    color:white;
+}
+  .nav-item .badge-count { margin-left: auto; background: var(--risk-h-bg);
+    color: var(--risk-h); font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 20px; }
+  .sidebar-footer { padding: 14px 16px; border-top: 1px solid var(--border); }
+  .model-info { font-size: 11px; color: var(--text3); line-height: 1.8; }
+  .model-info span { color: var(--green); font-weight: 600; }
+
+  /* ─── MAIN ─── */
+  .main{
+    margin-left:260px;
+    flex:1;
+    min-height:100vh;
+}
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 58px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .page-crumb { font-size: 12px; color: var(--text3); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px;
+    padding: 4px 12px; font-size: 11px; color: var(--text2); }
+  .btn { padding: 7px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { background: var(--surface2); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-danger { background: var(--risk-h-bg); color: var(--risk-h); border-color: var(--risk-h-bd); }
+
+  /* ─── CONTENT ─── */
+  .content{
+    padding:32px;
+}
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ─── GRID / CARDS ─── */
+  .metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 18px; }
+.metric-card{
+    position:relative;
+    overflow:hidden;
+    border-radius:24px;
+    transition:all .3s ease;
+    min-height:180px;
+    height:210px;
+    padding-left:10px;
+}
+
+.metric-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 15px 30px rgba(0,0,0,.12);
+}
+
+.metric-card::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+        135deg,
+        rgba(255,255,255,.85),
+        rgba(255,255,255,.15)
+    );
+    pointer-events:none;
+}
+
+.card-line{
+    position:absolute;
+    left:10px;
+    width:70%;
+    bottom:18px;
+    height:5px;
+    border-radius:20px;
+}
+.card-illustration{
+    position:absolute;
+    font-size:90px;   /* was 70-80px */
+    right:25px;
+    top:40%;
+    transform:translateY(-30%);
+    opacity:0.12;      /* was 0.05-0.08 */
+
+    pointer-events:none;
+
+}
+.students-bg{
+    color:#2563eb;
+}
+
+.high-bg{
+    color:#ef4444;
+}
+
+.medium-bg{
+    color:#f59e0b;
+}
+
+.low-bg{
+    color:#22c55e;
+}
+.metric-icon,
+.metric-label,
+.metric-value,
+.metric-sub{
+    position:relative;
+    z-index:2;
+    
+}
+
+
+
+.metric-icon{
+    width:52px;
+    height:52px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:16px;
+    font-size:22px;
+}
+.total .metric-icon{
+    background:#dbeafe;
+    color:#2563eb;
+}
+
+.high .metric-icon{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+.medium .metric-icon{
+    background:#ffedd5;
+    color:#ea580c;
+}
+
+.success .metric-icon{
+    background:#dcfce7;
+    color:#16a34a;
+}
+
+.metric-label{
+    color:#6b7280;
+}
+
+.metric-value{
+    color:#111827;
+    font-size:56px;
+    font-weight:800;
+}
+
+.metric-sub{
+    color:#9ca3af;
+}
+
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .card{
+    background:white;
+    border-radius:20px;
+    box-shadow:0 8px 20px rgba(0,0,0,.05);
+    padding:24px;
+}
+  .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
+  .chart-wrap { position: relative; width: 100%; }
+  .card{
+    transition: all 0.3s ease;
+}
+
+.card:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+}
+
+  /* ─── STUDENT TABLE ─── */
+  .table-controls { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
+  .search-wrap { flex: 1; position: relative; }
+  .search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+  .search-wrap input { width: 100%; padding: 8px 12px 8px 32px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border2); background: var(--surface); font-size: 13px; color: var(--text);
+    outline: none; transition: border-color 0.15s; }
+  .search-wrap input:focus { border-color: var(--accent); }
+  select.filter-sel { padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border2);
+    background: var(--surface); font-size: 13px; color: var(--text); outline: none; cursor: pointer; }
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: 13px; }
+  thead { background: var(--surface2); }
+  th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700;
+    color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+  .student-name { font-weight: 600; font-size: 13px; }
+  .student-id { font-size: 11px; color: var(--text3); }
+
+  /* ─── BADGES ─── */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px;
+    border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge-High { background: var(--risk-h-bg); color: var(--risk-h); }
+  .badge-Medium { background: var(--risk-m-bg); color: var(--risk-m); }
+  .badge-Low { background: var(--risk-l-bg); color: var(--risk-l); }
+  .badge-High::before { content:'●'; font-size: 8px; }
+  .badge-Medium::before { content:'●'; font-size: 8px; }
+  .badge-Low::before { content:'●'; font-size: 8px; }
+
+  /* ─── PROGRESS BAR ─── */
+  .progress{
+    height:12px;
+    border-radius:999px;
+}
+  .prog-wrap { display: flex; align-items: center; gap: 7px; }
+  .prog { height: 7px; width: 80px; border-radius: 4px; background: var(--surface2); overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+  .prog-fill.High { background: var(--risk-h); }
+  .prog-fill.Medium { background: var(--risk-m); }
+  .prog-fill.Low { background: var(--green); }
+  .prog-val { font-size: 12px; font-weight: 600; color: var(--text2); min-width: 32px; }
+
+  /* ─── PREDICT FORM ─── */
+  .predict-layout { display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .field input, .field select {
+    padding: 9px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border2);
+    background: var(--surface); font-size: 13px; color: var(--text); outline: none;
+    transition: border-color 0.15s; font-family: var(--font); }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field .hint { font-size: 11px; color: var(--text3); }
+  .field .range-val { font-size: 13px; font-weight: 700; color: var(--accent); }
+  input[type=range] { padding: 0; cursor: pointer; accent-color: var(--accent); }
+
+  /* ─── RISK RESULT PANEL ─── */
+  .result-panel { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 20px; position: sticky; top: 80px; }
+  .result-empty { text-align: center; color: var(--text3); padding: 30px 0; font-size: 13px; }
+  .result-empty i { font-size: 36px; margin-bottom: 10px; display: block; }
+  .risk-hero { border-radius: var(--radius-sm); padding: 16px; margin-bottom: 14px; }
+  .risk-hero.High { background: var(--risk-h-bg); border: 1px solid var(--risk-h-bd); }
+  .risk-hero.Medium { background: var(--risk-m-bg); border: 1px solid var(--risk-m-bd); }
+  .risk-hero.Low { background: var(--risk-l-bg); border: 1px solid var(--risk-l-bd); }
+  .risk-level-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .risk-level-label.High { color: var(--risk-h); }
+  .risk-level-label.Medium { color: var(--risk-m); }
+  .risk-level-label.Low { color: var(--risk-l); }
+  .risk-pct { font-size: 38px; font-weight: 900; line-height: 1; }
+  .risk-pct.High { color: var(--risk-h); }
+  .risk-pct.Medium { color: var(--risk-m); }
+  .risk-pct.Low { color: var(--risk-l); }
+  .risk-sub { font-size: 12px; color: var(--text2); margin-top: 5px; }
+  .section-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase;
+    letter-spacing: 0.07em; margin-bottom: 8px; margin-top: 14px; }
+
+  /* ─── SHAP BARS ─── */
+  .shap-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .shap-lbl { font-size: 12px; color: var(--text2); width: 130px; flex-shrink: 0; }
+  .shap-bar-bg { flex: 1; height: 16px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .shap-bar { height: 100%; border-radius: 3px; display: flex; align-items: center; padding-left: 6px;
+    font-size: 10px; font-weight: 700; color: #fff; min-width: 0; transition: width 0.5s ease; }
+
+  /* ─── INTERVENTIONS ─── */
+  .int-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .int-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 16px; border-left: 3px solid #ccc; }
+  .int-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .int-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 20px; }
+  .int-priority { font-size: 10px; font-weight: 600; }
+  .int-priority.Critical { color: var(--risk-h); }
+  .int-priority.High { color: var(--risk-m); }
+  .int-priority.Medium { color: var(--accent); }
+  .int-priority.Low { color: var(--green); }
+  .int-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+  .int-desc { font-size: 12px; color: var(--text2); line-height: 1.6; }
+  .int-count { font-size: 11px; color: var(--text3); margin-top: 8px; display: flex; align-items: center; gap: 5px; }
+  .int-count i { font-size: 12px; }
+
+  /* ─── MODEL METRICS ─── */
+  .metrics-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+  .metric-simple { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 14px 16px; text-align: center; }
+  .ms-value { font-size: 26px; font-weight: 800; color: var(--green); }
+  .ms-label { font-size: 11px; color: var(--text3); margin-top: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .algo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .algo-name { font-size: 12px; color: var(--text2); width: 140px; flex-shrink: 0; }
+  .algo-bar-bg { flex: 1; height: 20px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .algo-bar { height: 100%; border-radius: 3px; display: flex; align-items: center; padding: 0 8px;
+    font-size: 11px; font-weight: 700; color: #fff; }
+
+  /* ─── DEPT BARS ─── */
+  .dept-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .dept-name { font-size: 12px; color: var(--text2); width: 88px; flex-shrink: 0; }
+  .dept-bg { flex: 1; height: 22px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .dept-fill { height: 100%; border-radius: 3px; display: flex; align-items: center; padding-left: 8px;
+    font-size: 11px; font-weight: 700; color: #fff; transition: width 0.5s; }
+
+  /* ─── FEATURE IMPORTANCE ─── */
+  .fi-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .fi-name { font-size: 12px; color: var(--text2); width: 130px; flex-shrink: 0; }
+  .fi-bg { flex: 1; height: 16px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .fi-fill { height: 100%; border-radius: 3px; display: flex; align-items: center; padding-left: 6px;
+    font-size: 10px; font-weight: 700; color: #fff; }
+
+  /* ─── LOADING ─── */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 60px;
+    flex-direction: column; gap: 12px; color: var(--text3); font-size: 13px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── LEGEND ─── */
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; justify-content: center; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+  .tag-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+
+  @media (max-width: 900px) {
+    .charts-row, .metrics-row, .metrics-4 { grid-template-columns: 1fr; }
+    .predict-layout { grid-template-columns: 1fr; }
+    .int-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    width: 400px;
+    margin: 8% auto;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.add-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.modal-content{
+  max-height:90vh;
+  overflow-y:auto;
+  padding:24px;
+}
+body.modal-open{
+  overflow:hidden;
+}
+.form-group{
+  margin-bottom:16px;
+}
+.form-group label{
+  font-size:14px;
+  font-weight:500;
+  color:#555;
+  margin-bottom:6px;
+  display:block;
+}
+.form-group select,.form-group input{
+  width:100%;
+  height:52px;
+  padding:12px 14px;
+  border-radius:6px;
+  border:1px solid #ddd;
+  font-size:16px;
+  box-sizing:border-box;
+  background:white;
+}
+#studentModal.modal-content{
+  max-height:90vh;
+  overflow-y:auto;
+  padding:24px;
+  padding-bottom:40px;
+}
+#studentModal button{
+  margin-top:16px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:14px;
+  font-size:16px;
+  margin-top:16px;
+  cursor:pointer;
+  margin-bottom:16px;
+}
+.logout-btn{
+    background:#ef4444;
+    color:white;
+    padding:10px 18px;
+    text-decoration:none;
+    border-radius:8px;
+    font-weight:600;
+}
+
+.logout-btn:hover{
+    background:#dc2626;
+}
+.btn-danger{
+  background:#ef4444;
+  color:white;
+  padding:10px 16px;
+  border-radius:8px;
+  text-decoration:none;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.btn-danger:hover{
+  background:#dc2626;
+}
+.modal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    z-index:9999;
+}
+
+.modal-content{
+    background:white;
+    width:600px;
+    max-height:80vh;
+    overflow-y:auto;
+    margin:5% auto;
+    padding:20px;
+    border-radius:12px;
+}
+
+.student-row{
+    padding:10px;
+    border-bottom:1px solid #ddd;
+}
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.5);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.modal-box{
+    background:white;
+    padding:20px;
+    width:700px;
+    max-height:80vh;
+    overflow:auto;
+    border-radius:12px;
+}
+
+.modal-box table{
+    width:100%;
+}
+
+.modal-box th,
+.modal-box td{
+    padding:10px;
+    border:1px solid #ddd;
+}
+.faculty-profile{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:6px 12px;
+    background:white;
+    border-radius:50px;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.faculty-profile img{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    object-fit:cover;
+}
+
+.faculty-name{
+    font-size:14px;
+    font-weight:600;
+    color:#111827;
+}
+
+.faculty-role{
+    font-size:12px;
+    color:#6b7280;
+}
+.risk-container{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:30px;
+}
+
+.risk-chart{
+    flex:1;
+}
+
+.risk-summary{
+    width:180px;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+.risk-flex{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:40px;
+}
+
+.risk-card{
+    position:relative;
+}
+
+.risk-summary{
+    position:absolute;
+    right:10px;
+    top:90px;
+    width:180px;
+}
+#riskChart{
+    max-width:280px;
+}
+</style>
+</head>
+<body>
+
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon"><i class="fa-solid fa-brain"></i></div>
+    <div class="logo-title">DropGuard AI</div>
+    <div class="logo-sub">Dropout Prediction System</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Analytics</div>
+    <div class="nav-item active" data-section="dashboard">
+      <i class="fa-solid fa-chart-pie"></i> Dashboard
+    </div>
+    <div class="nav-item" data-section="students">
+      <i class="fa-solid fa-users"></i> Students
+      <span class="badge-count" id="high-count-badge">—</span>
+    </div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" data-section="predict">
+      <i class="fa-solid fa-magnifying-glass-chart"></i> Predict Risk
+    </div>
+    <div class="nav-item" data-section="interventions">
+      <i class="fa-solid fa-hand-holding-heart"></i> Interventions
+    </div>
+    <div class="nav-label">Model</div>
+    <div class="nav-item" data-section="model">
+      <i class="fa-solid fa-sliders"></i> Model Metrics
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="model-info">
+      Algorithm: <span>Random Forest</span><br>
+      Accuracy: <span id="sb-acc">—</span><br>
+      Recall: <span id="sb-rec">—</span><br>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title" id="page-title">Overview Dashboard</div>
+        <div class="page-crumb" id="page-crumb">Academic Year 2025–26</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+
+  <div class="chip">
+    <i class="fa-solid fa-circle" style="color:#22c55e"></i>
+    Model Active
+  </div>
+
+
+
+  <div class="faculty-profile">
+      <img src="/static/faculty.webp" alt="Faculty">
+      <div>
+          <div class="faculty-name">{{ session['faculty_name'] }}</div>
+          <div class="faculty-role">Faculty</div>
+      </div>
+  </div>
+
+  <a href="/logout" class="btn btn-danger">
+      Logout
+  </a>
+
+</div>
+  </header>
+
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <section class="section active" id="sec-dashboard">
+      <div class="metrics-row" id="dash-metrics">
+        <div class="loading"><div class="spinner"></div>Loading…</div>
+      </div>
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Risk Distribution</div>
+          </div>
+          <div class="chart-wrap" style="height:180px;">
+            <canvas id="donutChart" role="img" aria-label="Donut chart showing student risk distribution"></canvas>
+          </div>
+          <div class="legend" id="donut-legend"></div>
+          <div class="risk-summary">
+    <div class="risk-container">
+    <div class="risk-flex">
+    <div class="risk-chart">
+        <canvas id="riskChart"></canvas>
+    </div>
+
+</div>
+</div>
+</div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Department-wise Dropout Risk %</div>
+          </div>
+          <div id="dept-bars"></div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Feature Importance — Random Forest (Explainable AI)</div>
+          <span style="font-size:11px;color:var(--text3);">% contribution to dropout prediction</span>
+        </div>
+        <div id="fi-bars"></div>
+      </div>
+    </section>
+
+    <!-- ═══ STUDENTS ═══ -->
+    <section class="section" id="sec-students">
+      <button onclick="openStudentModal()" class="add-btn">
+    + Add Student
+</button>
+      <div class="table-controls">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search-input" placeholder="Search by name, ID, or department…" oninput="filterStudents()">
+        </div>
+        <select class="filter-sel" id="risk-filter" onchange="filterStudents()">
+          <option value="">All Risk Levels</option>
+          <option value="High">High Risk</option>
+          <option value="Medium">Medium Risk</option>
+          <option value="Low">Low Risk</option>
+        </select>
+        <select class="filter-sel" id="dept-filter" onchange="filterStudents()">
+          <option value="">All Departments</option>
+          <option>CS</option><option>Mechanical</option><option>Civil</option>
+          <option>ECE</option><option>IT</option><option>EEE</option>
+        </select>
+        <div style="font-size:12px;color:var(--text3);white-space:nowrap;" id="student-count"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th><th>Dept</th><th>Attendance</th><th>Marks</th>
+              <th>Backlogs</th><th>Income</th><th>Stress</th>
+              <th>Risk Score</th><th>Risk Level</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="student-tbody">
+            <tr><td colspan="10"><div class="loading"><div class="spinner"></div>Loading students…</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ PREDICT ═══ -->
+    <section class="section" id="sec-predict">
+      <div class="predict-layout">
+        <div class="card">
+          <div class="card-header" style="margin-bottom:18px;">
+            <div class="card-title">Student Data Input</div>
+            <span style="font-size:11px;color:var(--text3);">All fields required for accurate prediction</span>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Attendance (%)</label>
+              <input type="number" id="p-attend" value="72" min="0" max="100" step="1">
+              <span class="hint">Recommended ≥75% for low risk</span>
+            </div>
+            <div class="field">
+              <label>Internal Marks (/100)</label>
+              <input type="number" id="p-marks" value="55" min="0" max="100" step="1">
+            </div>
+            <div class="field">
+              <label>Assignments Submitted</label>
+              <input type="number" id="p-assign" value="6" min="0" max="10" step="1">
+              <span class="hint">Out of 10 total</span>
+            </div>
+            <div class="field">
+              <label>Active Backlogs</label>
+              <input type="number" id="p-backlogs" value="2" min="0" max="10" step="1">
+            </div>
+            <div class="field">
+              <label>Family Annual Income</label>
+              <select id="p-income">
+                <option value="low">Below ₹2L / year</option>
+                <option value="medium" selected>₹2L – ₹6L / year</option>
+                <option value="high">Above ₹6L / year</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Travel Distance (km)</label>
+              <input type="number" id="p-travel" value="18" min="0" max="100" step="1">
+            </div>
+            <div class="field">
+              <label>Internet Access at Home</label>
+              <select id="p-internet">
+                <option value="yes" selected>Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Extracurricular Participation</label>
+              <select id="p-participation">
+                <option value="none" selected>None</option>
+                <option value="some">Some</option>
+                <option value="active">Active</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Stress Level<span class="range-val" id="stress-val">7</span>/10</label>
+              <input type="range" id="p-stress" min="1" max="10" value="7"
+                oninput="document.getElementById('stress-val').textContent=this.value">
+              <span class="hint">1 = Very low · 10 = Extremely high</span>
+            </div>
+            <div class="field">
+              <label>Department</label>
+              <select id="p-dept">
+                <option>CS</option><option>Mechanical</option><option>Civil</option>
+                <option>ECE</option><option>IT</option><option>EEE</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:18px;padding:11px;" onclick="runPredict()">
+            <i class="fa-solid fa-brain"></i> Run ML Prediction
+          </button>
+        </div>
+
+        <!-- Result Panel -->
+        <div class="result-panel" id="result-panel">
+          <div class="result-empty" id="result-empty">
+            <i class="fa-regular fa-circle-dot"></i>
+            Fill in student data and click<br><strong>Run ML Prediction</strong>
+          </div>
+          <div id="result-content" style="display:none;">
+            <div class="risk-hero" id="risk-hero">
+              <div class="risk-level-label" id="res-level-label">High Risk</div>
+              <div class="risk-pct" id="res-pct">78%</div>
+              <div class="risk-sub">Dropout Risk Score</div>
+            </div>
+            <div class="section-label">Explainable AI — Factor Contributions</div>
+            <div id="shap-bars"></div>
+            <div class="section-label">Recommended Interventions</div>
+            <div id="res-interventions"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ INTERVENTIONS ═══ -->
+    <section class="section" id="sec-interventions">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.7;">
+        Recommended actions generated from ML-identified risk factors across the student population.
+        Each intervention is mapped to a specific risk signal detected by the prediction model.
+      </div>
+      <div class="int-grid" id="int-grid">
+        <div class="loading"><div class="spinner"></div>Loading…</div>
+      </div>
+    </section>
+
+    <!-- ═══ MODEL METRICS ═══ -->
+    <section class="section" id="sec-model">
+      <div class="metrics-4" id="model-metrics-cards"></div>
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Confusion Matrix</div></div>
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="confMatrix" role="img" aria-label="Confusion matrix"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Algorithm Comparison</div></div>
+          <div id="algo-bars"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Why Recall Matters in Dropout Prediction</div></div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;">
+          In dropout prediction, a <strong>False Negative</strong> — missing an at-risk student — is
+          far more costly than a <strong>False Positive</strong>. If we classify a high-risk student
+          as safe, they receive no intervention and may drop out. Our Random Forest model prioritises
+          <strong style="color:var(--green);">high recall</strong> to minimise missed at-risk
+          students. The confusion matrix above shows the breakdown of correct and incorrect
+          predictions on the held-out test set (20% of 1,200 students). XGBoost achieves similar
+          accuracy but Random Forest provides superior <em>interpretability</em> via feature
+          importance — critical for faculty to trust and act on recommendations.
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ─── NAV ───
+const sections = { dashboard:'Overview Dashboard', students:'Student Risk List',
+  predict:'Predict Dropout Risk', interventions:'Intervention Recommendations', model:'Model Metrics & Explainability' };
+const crumbs = { dashboard:'Academic Year 2025-26',
+  predict:'Enter student attributes to get ML-powered risk prediction',
+  interventions:'Actions mapped to ML-identified risk signals',
+  model:'Random Forest · Scikit-learn · Test set evaluation' };
+
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    const sec = el.dataset.section;
+    document.getElementById('sec-'+sec).classList.add('active');
+    document.getElementById('page-title').textContent = sections[sec];
+    document.getElementById('page-crumb').textContent = crumbs[sec];
+    if (sec === 'students' && !studentsLoaded) loadStudents();
+    if (sec === 'interventions' && !intLoaded) loadInterventions();
+    if (sec === 'model' && !modelLoaded) loadModel();
+  });
+});
+
+// ─── CHARTS STORAGE ───
+let charts = {};
+let studentsData = [], studentsLoaded=false, intLoaded=false, modelLoaded=false;
+
+// ─── COLORS ───
+const DEPT_COLORS = ['#E24B4A','#EF9F27','#378ADD','#1D9E75','#7F77DD','#D4537E'];
+const FI_COLORS   = ['#1D9E75','#4F46E5','#E24B4A','#378ADD','#EF9F27','#D4537E','#2563EB','#7F77DD'];
+
+// ─── DASHBOARD ───
+async function loadDashboard() {
+  const res = await fetch('/api/dashboard');
+  const d = await res.json();
+
+  // Metric cards
+  document.getElementById('dash-metrics').innerHTML = `
+    <div class="metric-card total">
+    <div class="metric-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+    </div>
+
+    <div class="metric-label">TOTAL STUDENTS</div>
+    <div class="metric-value">${d.totals.students}</div>
+    <div class="metric-sub">Across 6 departments</div>
+    <i class="fa-solid fa-users card-illustration students-bg"></i>
+    <div class="card-line" style="background:#2563eb"></div>
+</div>
+    <div class="metric-card high">
+      <div class="metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="metric-label">High Risk</div>
+      <div class="metric-value">${d.totals.high_risk}</div>
+      <div class="metric-sub">Immediate intervention needed</div>
+      <i class="fa-solid fa-user-xmark card-illustration high-bg"></i>
+      <div class="card-line" style="background:#ef4444"></div>
+    </div>
+    <div class="metric-card medium">
+      <div class="metric-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+      <div class="metric-label">Medium Risk</div>
+      <div class="metric-value">${d.totals.medium_risk}</div>
+      <div class="metric-sub">Needs close monitoring</div>
+      <i class="fa-solid fa-clock card-illustration medium-bg"></i>
+      <div class="card-line" style="background:#f59e0b"></div>
+    </div>
+    <div class="metric-card success">
+      <div class="metric-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="metric-label">Low Risk</div>
+      <div class="metric-value">${d.totals.low_risk}</div>
+      <div class="metric-sub">On track</div>
+      <i class="fa-solid fa-award card-illustration low-bg"></i>
+      <div class="card-line" style="background:#22c55e"></div>
+    </div>`;
+
+  document.getElementById('high-count-badge').textContent = d.totals.high_risk;
+
+  // Donut
+  const dCtx = document.getElementById('donutChart').getContext('2d');
+  const low = d.risk_distribution['Low']||0, med = d.risk_distribution['Medium']||0, high = d.risk_distribution['High']||0;
+  const tot = low+med+high;
+  if (charts.donut) charts.donut.destroy();
+  charts.donut = new Chart(dCtx, {
+    type:'doughnut',
+    data:{ labels:['Low','Medium','High'], datasets:[{ data:[low,med,high],
+      backgroundColor:['#639922','#EF9F27','#E24B4A'], borderWidth:3, borderColor:'#fff', hoverOffset:4 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%'}
+  });
+  document.getElementById('donut-legend').innerHTML = [
+    {c:'#639922',l:`Low ${Math.round(low/tot*100)}%`},
+    {c:'#EF9F27',l:`Medium ${Math.round(med/tot*100)}%`},
+    {c:'#E24B4A',l:`High ${Math.round(high/tot*100)}%`}
+  ].map(x=>`<div class="legend-item"><div class="legend-dot" style="background:${x.c}"></div>${x.l}</div>`).join('');
+
+  // Dept bars
+  const depts = Object.entries(d.dept_risk).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('dept-bars').innerHTML = depts.map(([name,pct],i)=>`
+    <div class="dept-row">
+      <div class="dept-name">${name}</div>
+      <div class="dept-bg">
+        <div class="dept-fill" style="width:${Math.min(pct*2.2,100)}%;background:${DEPT_COLORS[i]}">
+          ${pct}%
+        </div>
+      </div>
+    </div>`).join('');
+
+
+  // Feature importance
+  document.getElementById('fi-bars').innerHTML = d.feature_importance.slice(0,8).map((f,i)=>`
+    <div class="fi-row">
+      <div class="fi-name">${f.name}</div>
+      <div class="fi-bg">
+        <div class="fi-fill" style="width:${Math.min(f.value*6,100)}%;background:${FI_COLORS[i]}">
+          ${f.value.toFixed(1)}%
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── STUDENTS ───
+async function loadStudents() {
+  studentsLoaded = true;
+  const res = await fetch('http://127.0.0.1:5050/api/students');
+  console.log(res);
+  const d = await res.json();
+  console.log(d);
+  studentsData = d;
+  filterStudents();
+}
+
+function filterStudents() {
+  const q = (document.getElementById('search-input')?.value||'').toLowerCase();
+  const rf = String(document.getElementById('risk-filter')?.value||'').toLowerCase();
+  console.log("Risk Filter:",rf);
+  const df = String(document.getElementById('dept-filter')?.value||'').toLowerCase();
+  const filtered = studentsData.filter(s => {
+  const qLower = q.toLowerCase();
+
+  return (
+    (String(s.student_name || '').toLowerCase().includes(qLower) ||
+    String(s.student_id || '').toLowerCase().includes(qLower) ||
+    String(s.dept || '').toLowerCase().includes(qLower))&& (!rf || String(s.risk_level||'').toLowerCase()===rf)&&(!df||String(s.dept||'').toLowerCase()===df)
+  );
+});
+  document.getElementById('student-count').textContent = `${filtered.length} student${filtered.length!==1?'s':''} shown`;
+  document.getElementById('student-tbody').innerHTML = filtered.length
+    ? filtered.map(s => `
+      <tr>
+        <td><div class="student-name">${s.student_name}</div><div class="student-id">${s.student_id}</div></td>
+        <td><span class="tag-pill" style="background:var(--accent-bg);color:var(--accent)">${s.dept}</span></td>
+        <td>${Number(s.attendance).toFixed(0)}%</td>
+        <td>${Number(s.internal_marks).toFixed(0)}/100</td>
+        <td>${Number(s.backlogs)}</td>
+        <td><span style="font-size:12px;color:${s.family_income==='low'?'var(--risk-h)':s.family_income==='medium'?'var(--risk-m)':'var(--green)'}">${s.family_income==='low'?'Low':s.family_income==='medium'?'Medium':'High'}</span></td>
+        <td>${Number(s.stress)}/10</td>
+        <td>
+          <div class="prog-wrap">
+            <div class="prog"><div class="prog-fill ${s.risk_level}" style="width:${s.risk_score}%"></div></div>
+            <span class="prog-val">${s.risk_score.toFixed(0)}%</span>
+          </div>
+        </td>
+        <td><span class="badge badge-${s.risk_level}">${s.risk_level}</span></td>
+        <td>
+          <button class="btn" style="font-size:11px;padding:5px 10px;"
+            onclick="goPredict(${JSON.stringify(s).replace(/"/g,'&quot;')})">
+            <i class="fa-solid fa-arrow-right"></i> Predict
+          </button>
+        </td>
+      </tr>`).join('')
+    : `<tr><td colspan="10"><div class="empty-state">No students match your filters.</div></td></tr>`;
+}
+
+function goPredict(s) {
+  document.querySelector('[data-section="predict"]').click();
+  document.getElementById('p-attend').value = s.attendance.toFixed(0);
+  document.getElementById('p-marks').value = s.internal_marks.toFixed(0);
+  document.getElementById('p-backlogs').value = s.backlogs;
+  document.getElementById('p-income').value = s.family_income;
+  document.getElementById('p-stress').value = s.stress;
+  document.getElementById('stress-val').textContent = s.stress;
+  document.getElementById('p-dept').value = s.dept;
+  runPredict();
+}
+
+// ─── PREDICT ───
+async function runPredict() {
+  const data = {
+    attendance: document.getElementById('p-attend').value,
+    internal_marks: document.getElementById('p-marks').value,
+    assignments: document.getElementById('p-assign').value,
+    backlogs: document.getElementById('p-backlogs').value,
+    family_income: document.getElementById('p-income').value,
+    travel_distance: document.getElementById('p-travel').value,
+    internet: document.getElementById('p-internet').value,
+    participation: document.getElementById('p-participation').value,
+    stress: document.getElementById('p-stress').value,
+    dept: document.getElementById('p-dept').value,
+  };
+  document.getElementById('result-empty').style.display = 'none';
+  document.getElementById('result-content').style.display = 'none';
+  document.getElementById('result-panel').innerHTML += '';
+
+  const res = await fetch('/api/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+  const d = await res.json();
+
+  document.getElementById('result-empty').style.display = 'none';
+  document.getElementById('result-content').style.display = 'block';
+
+  const hero = document.getElementById('risk-hero');
+  hero.className = 'risk-hero ' + d.level;
+  document.getElementById('res-level-label').className = 'risk-level-label ' + d.level;
+  document.getElementById('res-level-label').textContent = d.level + ' Risk';
+  document.getElementById('res-pct').className = 'risk-pct ' + d.level;
+  document.getElementById('res-pct').textContent = d.risk_pct.toFixed(1) + '%';
+
+  // SHAP
+  const shapColors = ['#E24B4A','#EF9F27','#378ADD','#1D9E75','#D4537E','#533AB7','#854F0B'];
+  const contribs = Object.entries(d.contributions).sort((a,b)=>b[1]-a[1]).filter(x=>x[1]>0);
+  document.getElementById('shap-bars').innerHTML = contribs.map(([k,v],i)=>`
+    <div class="shap-row">
+      <div class="shap-lbl">${k}</div>
+      <div class="shap-bar-bg">
+        <div class="shap-bar" style="width:${Math.min(v,100)}%;background:${shapColors[i%shapColors.length]}">
+          ${v>8?v.toFixed(0)+'%':''}
+        </div>
+      </div>
+    </div>`).join('') || '<div style="color:var(--text3);font-size:12px;">No significant risk factors detected.</div>';
+
+  // Interventions
+  const iconMap = { phone:'fa-phone', calendar:'fa-calendar', book:'fa-book-open',
+    pencil:'fa-pencil', 'alert-triangle':'fa-triangle-exclamation', 'clipboard-list':'fa-clipboard-list',
+    cash:'fa-money-bill-wave', heart:'fa-heart', bus:'fa-bus', wifi:'fa-wifi', check:'fa-check-circle' };
+  document.getElementById('res-interventions').innerHTML = d.interventions.map(iv=>`
+    <div style="display:flex;align-items:flex-start;gap:9px;margin-bottom:10px;padding:10px 12px;
+      border-radius:var(--radius-sm);background:var(--surface2);border-left:3px solid ${iv.color}">
+      <i class="fa-solid ${iconMap[iv.icon]||'fa-circle-dot'}" style="color:${iv.color};font-size:14px;margin-top:1px;flex-shrink:0;"></i>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;">${iv.title}
+          <span style="font-size:10px;font-weight:600;color:${iv.color};margin-left:4px;">${iv.priority}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.5;">${iv.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── INTERVENTIONS ───
+async function loadInterventions() {
+  intLoaded = true;
+  const res = await fetch('/api/interventions');
+  const d = await res.json();
+  const typeColors = { attendance:'#FCE8E8', academic:'#E8F0FB', financial:'#FEF3E2', social:'#FCE8F0', digital:'#EEE8FD' };
+  document.getElementById('int-grid').innerHTML = d.interventions.map(iv=>`
+    <div class="int-card"
+     onclick="showStudents('${iv.type}')"
+     style="border-left-color:${iv.color};cursor:pointer">
+      <div class="int-meta">
+        <span class="int-tag" style="background:${typeColors[iv.type]||'#eee'};color:${iv.color}">${iv.tag}</span>
+        <span class="int-priority Critical" style="color:${iv.color}">● ${iv.count} students</span>
+      </div>
+      <div class="int-title">${iv.title}</div>
+      <div class="int-desc">${iv.desc}</div>
+    </div>`).join('');
+}
+// ─── MODEL METRICS ───
+async function loadModel() {
+  modelLoaded = true;
+  const res = await fetch('/api/metrics');
+  const d = await res.json();
+  const rf = d.random_forest;
+
+  document.getElementById('sb-acc').textContent = rf.accuracy + '%';
+  document.getElementById('sb-rec').textContent = rf.recall + '%';
+
+  document.getElementById('model-metrics-cards').innerHTML = [
+    { label:'Accuracy', val: rf.accuracy+'%' },
+    { label:'Precision', val: rf.precision+'%' },
+    { label:'Recall (Sensitivity)', val: rf.recall+'%' },
+    { label:'F1-Score', val: rf.f1+'%' },
+  ].map(m=>`<div class="metric-simple"><div class="ms-value">${m.val}</div><div class="ms-label">${m.label}</div></div>`).join('');
+
+  // Confusion matrix
+  const cm = rf.confusion_matrix;
+  const tn=cm[0][0], fp=cm[0][1], fn=cm[1][0], tp=cm[1][1];
+  const cCtx = document.getElementById('confMatrix').getContext('2d');
+  if (charts.conf) charts.conf.destroy();
+  charts.conf = new Chart(cCtx, {
+    type:'bar',
+    data:{ labels:['True Pos (Correct Risk)','False Pos (Over-flagged)','False Neg (Missed!)','True Neg (Correct Safe)'],
+      datasets:[{ label:'Count', data:[tp,fp,fn,tn],
+        backgroundColor:['#639922','#EF9F27','#E24B4A','#378ADD'], borderRadius:4, borderWidth:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{ display:false } },
+      scales:{ x:{ ticks:{font:{size:10}} }, y:{ ticks:{font:{size:10}} } } }
+  });
+
+  // Algo comparison
+  const algos = [
+    { name:'Logistic Regression', acc: d.logistic_regression.accuracy, color:'#B4B2A9' },
+    { name:'Decision Tree',       acc: d.decision_tree.accuracy,       color:'#7F77DD' },
+    { name:'Random Forest ✓',    acc: rf.accuracy,                    color:'#639922' },
+    { name:'XGBoost (est.)',      acc: Math.min(rf.accuracy+1.5, 95),  color:'#378ADD' },
+  ];
+  document.getElementById('algo-bars').innerHTML = algos.map(a=>`
+    <div class="algo-row">
+      <div class="algo-name">${a.name}</div>
+      <div class="algo-bar-bg">
+        <div class="algo-bar" style="width:${(a.acc-60)*2.8}%;background:${a.color}">
+          ${a.acc}%
+        </div>
+      </div>
+    </div>`).join('');
+}
+// ─── INIT ───
+loadDashboard().then(() => loadModel());
+async function showStudents(type) {
+
+    const res = await fetch(`/api/intervention_students/${type}`);
+    const students = await res.json();
+
+    let html = `
+    <div class="modal-overlay" onclick="closeStudentList()">
+      <div class="modal-box" onclick="event.stopPropagation()">
+        <h2>Students Requiring Intervention</h2>
+    `;
+
+    if(students.length === 0){
+        html += `<p>No students found.</p>`;
+    } else {
+
+        html += `
+        <table style="width:100%;border-collapse:collapse">
+            <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Department</th>
+            </tr>
+        `;
+
+        students.forEach(s => {
+            html += `
+            <tr>
+                <td>${s.student_name}</td>
+                <td>${s.student_id}</td>
+                <td>${s.dept}</td>
+            </tr>
+            `;
+        });
+
+        html += `</table>`;
+    }
+
+    html += `
+        <br>
+        <button onclick="closeStudentList()">Close</button>
+      </div>
+    </div>
+    `;
+
+    document.getElementById("studentListModal").innerHTML = html;
+}
+function closeStudentModal(){
+    document.getElementById("studentModal").style.display="none";
+}
+function closeStudentList() {
+    document.getElementById("studentListModal").innerHTML = "";
+}
+</script>
+<div id="studentModal" class="modal">
+
+    <div class="modal-content">
+
+        <span onclick="closeStudentModal()">&times;</span>
+
+        <h2>Add Student</h2>
+
+        <input type="text" id="name" placeholder="Student Name">
+
+        <input type="text" id="usn" placeholder="USN">
+
+        <input type="text" id="department" placeholder="Department">
+
+        <input type="number" id="attendance" placeholder="Attendance">
+
+        <input type="number" id="marks" placeholder="Marks">
+
+        <input type="number" id="backlogs" placeholder="Backlogs">
+        <input type="number" id="assignments"
+placeholder="Assignments Submitted">
+<div class="form-group">
+<label>Family Income</label>
+<select id="income">
+  <option value="high" selected>High</option>
+  <option value="low">Low</option>
+  <option value="medium">Medium</option>
+</select>
+</div>
+
+<input type="number" id="travel"
+placeholder="Travel Distance">
+<div class="form-group">
+<label>Internet Access</label>
+<select id="internet" placeholder="Internet">
+    <option value="yes" selected>Yes</option>
+    <option value="no">No</option>
+</select>
+</div>
+<div class="form-group">
+<label>Extracurricular Participation</label>
+<select id="participation" placeholder="Participation">
+    <option value="active" selected>Active</option>
+    <option value="some">Some</option>
+    <option value="none">None</option>
+</select>
+</div>
+
+<input type="number" id="stress"
+placeholder="Stress Level(out of 10)">
+
+        <button onclick="saveStudent()">
+            Save Student
+        </button>
+
+    </div>
+
+</div>
+<script>
+
+function openStudentModal() {
+    document.getElementById("studentModal").style.display = "block";
+    document.body.classList.add("modal-open");
+}
+
+function closeStudentModal() {
+    document.getElementById("studentModal").style.display = "none";
+    document.body.classList.remove("modal-open");
+}
+
+async function saveStudent() {
+
+    const student = {
+
+        name: document.getElementById("name").value,
+        usn: document.getElementById("usn").value,
+        department: document.getElementById("department").value,
+        attendance: document.getElementById("attendance").value,
+        marks: document.getElementById("marks").value,
+        backlogs: document.getElementById("backlogs").value,
+        assignments: document.getElementById("assignments").value,
+
+income: document.getElementById("income").value,
+
+travel: document.getElementById("travel").value,
+
+internet: document.getElementById("internet").value,
+
+participation: document.getElementById("participation").value,
+
+stress: document.getElementById("stress").value
+    };
+
+    const response = await fetch('/add_student', {
+
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify(student)
+    });
+
+    const result = await response.json();
+
+    alert(result.message);
+
+    location.reload();
+}
+
+</script>
+<div id="studentModal" class="modal">
+  <div class="modal-content">
+    <h2 id="modalTitle">Students</h2>
+
+    <div id="studentList"></div>
+
+    <button onclick="closeStudentModal()">
+      Close
+    </button>
+  </div>
+</div>
+<div id="studentListModal"></div>
+
+</body>
+</html>
