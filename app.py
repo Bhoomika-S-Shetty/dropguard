@@ -207,7 +207,7 @@ def dashboard():
 
 @app.route('/api/students')
 def students():
-    df=pd.read_csv(r'C:\Users\Bhoomika\OneDrive\Desktop\dropguard\data\students.csv')
+    df=pd.read_csv(os.path.join(BASE,"data","students.csv"))
     df['risk_level'] = df['risk_score'].apply(
         lambda r: 'High' if r >= 65 else ('Medium' if r >= 35 else 'Low')
     )
