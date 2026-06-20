@@ -121,15 +121,23 @@ def login():
     email = request.form.get('username')
     password = request.form.get('password')
 
-    print("Email:", email)
-    print("Password:", password)
-    session['faculty_name'] = email
-    return redirect('/dashboard')
+    with open('data/faculty.csv', 'r', newline='') as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            if row['email'] == email and row['password'] == password:
+                session['faculty_name'] = row['name']
+                return redirect('/dashboard')
+
+    return "Invalid Email or Password"
 @app.route('/logout')
 def logout():
     return redirect('/')
 @app.route('/dashboard')
 def dashboard_page():
+    if 'faculty_name' not in session:
+        return redirect('/')
+
     return render_template('index.html')
 @app.route('/signup',methods=['GET'])
 def signup():
