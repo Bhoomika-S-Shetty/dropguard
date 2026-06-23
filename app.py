@@ -192,8 +192,6 @@ def dashboard():
 
     dept_risk = df.groupby('dept')['dropout'].mean().mul(100).round(1).to_dict()
     risk_dist  = df['risk_level'].value_counts().to_dict()
-    monthly_attendance = [82.1,78.4,74.3,70.8,67.5,72.1,75.3,71.9]
-    monthly_risk       = [21.4,27.8,34.1,41.5,47.9,44.2,39.6,43.1]
 
     fi = metrics['feature_importance']
     fi_sorted = sorted(fi.items(), key=lambda x: x[1], reverse=True)
@@ -208,8 +206,6 @@ def dashboard():
         },
         'risk_distribution': risk_dist,
         'dept_risk': dept_risk,
-        'monthly_attendance': monthly_attendance,
-        'monthly_risk': monthly_risk,
         'feature_importance': feature_importance,
     })
 
